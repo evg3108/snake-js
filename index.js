@@ -3,7 +3,7 @@
 // классы
 class SnakeGame {
 
-    constructor({canvas, scale}) {
+    constructor({ canvas, scale }) {
         const fieldWidth = Math.floor(canvas.width / scale)
         const fieldHeight = Math.floor(canvas.height / scale)
         this.field = new PlayingField(fieldWidth, fieldHeight)
@@ -12,18 +12,23 @@ class SnakeGame {
         this.score = new Score()
         this.controls = new PlayerControls()
         this.renderer = new CanvasRenderer(canvas, this.snake, this.field, this.foods, this.score, scale)
+        this.lastFrameTimestamp = 0
     }
 
     start() {
         this._step = this.step.bind(this)
         window.requestAnimationFrame(this._step)
         this.renderer.render()
+
+        this.controls.onDirectionChange(direction => this.snake.setDirection(direction))
     }
 
-    step() {
-        this.snake.tick()
-        this.renderer.render()
-        
+    step(timestamp) {
+        if (timestamp - this.lastFrameTimestamp > 500) {
+            this.lastFrameTimestamp = timestamp
+            this.snake.tick()
+            this.renderer.render()
+        }
         window.requestAnimationFrame(this._step)
     }
 }
@@ -31,15 +36,15 @@ class SnakeGame {
 class GameRenderer {
 
     constructor() {
-    
+
     }
 
-    render(params) {}
+    render(params) { }
 }
 
 class CanvasRenderer extends GameRenderer {
 
-    constructor(canvas, snake, field, foods, score, scale) {  
+    constructor(canvas, snake, field, foods, score, scale) {
         super()
         this.canvas = canvas
         /** @type CanvasRenderingContext2D */
@@ -96,8 +101,8 @@ class Snake {
         ]
     }
 
-    setDirection() {
-
+    setDirection(direction) {
+        this.direction = direction
     }
 
     tick() {
@@ -106,10 +111,10 @@ class Snake {
         let shiftY = 0
         switch (this.direction) {
             case "up":
-                shiftY = 1
+                shiftY = -1
                 break;
             case "down":
-                shiftY = -1
+                shiftY = 1
                 break;
             case "left":
                 shiftX = -1
@@ -118,10 +123,10 @@ class Snake {
                 shiftX = 1
                 break;
         }
-        const newHead = new SnakeBit(head.x + shiftX, head.y + shiftY)
         this.body.pop() // remove tail
-        this.body.length
-        this.body.unshift(newHead)
+
+        const newHead = new SnakeBit(head.x + shiftX, head.y + shiftY)
+        this.body.unshift(newHead) // add new head
 
     }
 
@@ -155,6 +160,36 @@ class Score {
 
 class PlayerControls {
 
+    constructor(snake) {
+        this.snake=snake
+        this._onDocumentKeyDown = this.onDocumentKeyDown.bind(this)
+        document.addEventListener("keydown", this._onDocumentKeyDown)
+    }
+
+    onDirectionChange(callback) {
+        this.directionChangeCallback = callback
+    }
+
+    onDocumentKeyDown(event) {
+        let direction;
+        switch (event.key) {
+            case "ArrowRight":
+                direction = "right"
+                break;
+            case "ArrowLeft":
+                direction = "left"
+                break;
+            case "ArrowUp":
+                direction = "up"
+                break;
+            case "ArrowDown":
+                direction = "down"
+                break;
+        }
+        if (direction != null) {
+            this.directionChangeCallback(direction)
+        }
+    }
 }
 
 const settings = {
