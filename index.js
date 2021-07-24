@@ -3,19 +3,24 @@
 // классы
 class SnakeGame {
 
-    constructor({ canvas, scale }) {
-        const fieldWidth = Math.floor(canvas.width / scale)
-        const fieldHeight = Math.floor(canvas.height / scale)
-        this.field = new PlayingField(fieldWidth, fieldHeight)
+    constructor({ canvas, scale, speed }) {
+        this.scale = scale
+        this.speed = speed
+        this.fieldWidth = Math.floor(canvas.width / scale)
+        this.fieldHeight = Math.floor(canvas.height / scale)
+        this.canvas = canvas
+    }
+
+    start() {
+        this.field = new PlayingField(this.fieldWidth, this.fieldHeight)
         this.snake = new Snake(Math.floor(this.field.width / 2), Math.floor(this.field.height / 2))
         this.foods = []
         this.score = new Score()
         this.controls = new PlayerControls()
-        this.renderer = new CanvasRenderer(canvas, this.snake, this.field, this.foods, this.score, scale)
+        this.renderer = new CanvasRenderer(this.canvas, this.snake, this.field, this.foods, this.score, this.scale)
         this.lastFrameTimestamp = 0
-    }
 
-    start() {
+        this.placeFood()
         this._step = this.step.bind(this)
         window.requestAnimationFrame(this._step)
         this.renderer.render()
@@ -24,12 +29,29 @@ class SnakeGame {
     }
 
     step(timestamp) {
-        if (timestamp - this.lastFrameTimestamp > 500) {
+        if (timestamp - this.lastFrameTimestamp > 500 / this.speed) {
             this.lastFrameTimestamp = timestamp
             this.snake.tick()
             this.renderer.render()
+            this.checkWallCollision()
         }
         window.requestAnimationFrame(this._step)
+    }
+
+    placeFood() {
+        const foodX = Math.floor(Math.random() * this.field.width)
+        const foodY = Math.floor(Math.random() * this.field.height)
+        this.foods.push(new Food(foodX, foodY))
+    }
+
+    checkWallCollision() {
+        if (this.snake.head.x < 0 || this.snake.head.x >= this.field.width) this.gameOver()
+        if (this.snake.head.y < 0 || this.snake.head.y >= this.field.height) this.gameOver()
+    }
+
+    gameOver() {
+        alert("GAME IS OVER!!!")
+        this.start()
     }
 }
 
@@ -53,13 +75,15 @@ class CanvasRenderer extends GameRenderer {
         this.field = field
         this.foods = foods
         this.score = score
-
-        this.context.scale(scale, scale)
+        
+        this.context.setTransform(scale, 0, 0, scale, 0, 0);
+        // this.context.scale(scale, scale)
     }
 
     render(params) {
         this.context.clearRect(0, 0, this.field.width, this.field.height)
         this.drawSnake()
+        this.drawFoods()
     }
 
     drawSnake() {
@@ -68,7 +92,14 @@ class CanvasRenderer extends GameRenderer {
         });
     }
 
+    drawFoods() {
+        this.foods.forEach(food => {
+            this.drawPixel(food.x, food.y, "#00ff00")
+        })
+    }
+
     drawPixel(x, y, color) {
+        color = color ? color : "#000000"
         this.context.fillStyle = color
         this.context.fillRect(x, y, 1, 1)
     }
@@ -105,8 +136,11 @@ class Snake {
         this.direction = direction
     }
 
+    get head() {
+        return this.body[0]
+    }
+
     tick() {
-        const head = this.body[0]
         let shiftX = 0
         let shiftY = 0
         switch (this.direction) {
@@ -125,7 +159,7 @@ class Snake {
         }
         this.body.pop() // remove tail
 
-        const newHead = new SnakeBit(head.x + shiftX, head.y + shiftY)
+        const newHead = new SnakeBit(this.head.x + shiftX, this.head.y + shiftY)
         this.body.unshift(newHead) // add new head
 
     }
@@ -152,6 +186,18 @@ class SnakeBit {
 
 class Food {
 
+    constructor(x, y) {
+        this._x = x
+        this._y = y
+    }
+
+    get x() {
+        return this._x
+    }
+
+    get y() {
+        return this._y
+    }
 }
 
 class Score {
@@ -194,7 +240,8 @@ class PlayerControls {
 
 const settings = {
     canvas: document.getElementById("game-canvas"),
-    scale: 10
+    scale: 10,
+    speed: 6
 }
 
 
