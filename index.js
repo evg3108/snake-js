@@ -3,12 +3,13 @@
 // классы
 class SnakeGame {
 
-    constructor({ canvas, scale, speed }) {
+    constructor({ canvas, score, scale, speed }) {
         this.scale = scale
         this.speed = speed
         this.fieldWidth = Math.floor(canvas.width / scale)
         this.fieldHeight = Math.floor(canvas.height / scale)
         this.canvas = canvas
+        this.scoreElement = score
     }
 
     start() {
@@ -17,7 +18,7 @@ class SnakeGame {
         this.foods = []
         this.score = new Score()
         this.controls = new PlayerControls()
-        this.renderer = new CanvasRenderer(this.canvas, this.snake, this.field, this.foods, this.score, this.scale)
+        this.renderer = new CanvasRenderer(this.canvas, this.scoreElement, this.snake, this.field, this.foods, this.score, this.scale)
         this.lastFrameTimestamp = 0
 
         this.placeFood()
@@ -32,8 +33,10 @@ class SnakeGame {
         if (timestamp - this.lastFrameTimestamp > 500 / this.speed) {
             this.lastFrameTimestamp = timestamp
             this.snake.tick()
+            this.score.onTick()
             this.renderer.render()
             this.checkWallCollision()
+            this.checkFoodCollision()
         }
         window.requestAnimationFrame(this._step)
     }
@@ -49,8 +52,22 @@ class SnakeGame {
         if (this.snake.head.y < 0 || this.snake.head.y >= this.field.height) this.gameOver()
     }
 
+    checkFoodCollision() {
+        const eatenFoods = this.foods.filter(food => this.snake.head.x === food.x && this.snake.head.y === food.y)
+        if (eatenFoods.length == 0) return
+
+        eatenFoods.forEach(food => this.foods.splice(this.foods.indexOf(food), 1))
+        
+        eatenFoods.forEach(food => {
+            this.snake.grow()
+            this.score.onFoodEaten()
+        })
+        
+        this.placeFood()
+    }
+
     gameOver() {
-        alert("GAME IS OVER!!!")
+        alert(`Упс, игра окончена! Ваш счёт: ${this.score.points}`)
         this.start()
     }
 }
@@ -66,9 +83,10 @@ class GameRenderer {
 
 class CanvasRenderer extends GameRenderer {
 
-    constructor(canvas, snake, field, foods, score, scale) {
+    constructor(canvas, scoreElement, snake, field, foods, score, scale) {
         super()
         this.canvas = canvas
+        this.scoreElement = scoreElement
         /** @type CanvasRenderingContext2D */
         this.context = canvas.getContext("2d")
         this.snake = snake
@@ -84,6 +102,7 @@ class CanvasRenderer extends GameRenderer {
         this.context.clearRect(0, 0, this.field.width, this.field.height)
         this.drawSnake()
         this.drawFoods()
+        this.updateScore()
     }
 
     drawSnake() {
@@ -102,6 +121,10 @@ class CanvasRenderer extends GameRenderer {
         color = color ? color : "#000000"
         this.context.fillStyle = color
         this.context.fillRect(x, y, 1, 1)
+    }
+
+    updateScore() {
+        this.scoreElement.innerText = this.score.points
     }
 }
 
@@ -130,6 +153,7 @@ class Snake {
             new SnakeBit(fieldCenterX - 2, fieldCenterY),
             new SnakeBit(fieldCenterX - 3, fieldCenterY),
         ]
+        this.growCount = 0
     }
 
     setDirection(direction) {
@@ -157,11 +181,20 @@ class Snake {
                 shiftX = 1
                 break;
         }
-        this.body.pop() // remove tail
+        if (this.growCount > 0) {
+            this.growCount--
+        } else {
+            this.body.pop() // remove tail
+        }
+        
 
         const newHead = new SnakeBit(this.head.x + shiftX, this.head.y + shiftY)
         this.body.unshift(newHead) // add new head
 
+    }
+
+    grow() {
+        this.growCount++
     }
 
     getBody() {
@@ -201,7 +234,21 @@ class Food {
 }
 
 class Score {
+    constructor() {
+        this._points = 0
+    }
 
+    get points() {
+        return this._points
+    }
+
+    onFoodEaten() {
+        this._points += 100
+    }
+
+    onTick() {
+        this._points += 1
+    }
 }
 
 class PlayerControls {
@@ -240,6 +287,7 @@ class PlayerControls {
 
 const settings = {
     canvas: document.getElementById("game-canvas"),
+    score: document.getElementById("game-score"),
     scale: 10,
     speed: 6
 }
