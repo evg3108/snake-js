@@ -38,8 +38,11 @@ class SnakeGame {
             this.score.onTick()
             this.renderer.render()
             this.checkWallCollision()
-            this.checkFoodCollision()
             this.checkSnakeCollision()
+            const isFoodEaten = this.checkFoodCollision()
+            if (isFoodEaten) {
+                this.speed += 0.2
+            }
         }
         window.requestAnimationFrame(this._step)
     }
@@ -66,7 +69,7 @@ class SnakeGame {
 
     checkFoodCollision() {
         const eatenFoods = this.foods.filter(food => this.snake.head.x === food.x && this.snake.head.y === food.y)
-        if (eatenFoods.length == 0) return
+        if (eatenFoods.length == 0) return false
 
         eatenFoods.forEach(food => this.foods.splice(this.foods.indexOf(food), 1))
         
@@ -76,6 +79,7 @@ class SnakeGame {
         })
         
         this.placeFood()
+        return true
     }
 
     gameOver() {
@@ -330,7 +334,7 @@ const settings = {
     score: document.getElementById("game-score"),
     highScore: document.getElementById("game-high-score"),
     scale: 10,
-    speed: 6
+    speed: 4
 }
 
 
