@@ -3,20 +3,21 @@
 // классы
 class SnakeGame {
 
-    constructor({ canvas, score, scale, speed }) {
+    constructor({ canvas, score, highScore, scale, speed }) {
         this.scale = scale
         this.speed = speed
         this.fieldWidth = Math.floor(canvas.width / scale)
         this.fieldHeight = Math.floor(canvas.height / scale)
         this.canvas = canvas
         this.scoreElement = score
+        this.highScoreElement = highScore
     }
 
     start() {
         this.field = new PlayingField(this.fieldWidth, this.fieldHeight)
         this.snake = new Snake(Math.floor(this.field.width / 2), Math.floor(this.field.height / 2))
         this.foods = []
-        this.score = new Score()
+        this.score = new Score(localStorage.getItem("highScore") || 0)
         this.controls = new PlayerControls()
         this.renderer = new CanvasRenderer(this.canvas, this.scoreElement, this.snake, this.field, this.foods, this.score, this.scale)
         this.lastFrameTimestamp = 0
@@ -25,6 +26,7 @@ class SnakeGame {
         this._step = this.step.bind(this)
         window.requestAnimationFrame(this._step)
         this.renderer.render()
+        this.updateHighScore()
 
         this.controls.onDirectionChange(direction => this.snake.setDirection(direction))
     }
@@ -67,8 +69,23 @@ class SnakeGame {
     }
 
     gameOver() {
-        alert(`Упс, игра окончена! Ваш счёт: ${this.score.points}`)
+        const isNewHighScore = this.score.onGameOver()
+        let finalText;
+        if (isNewHighScore) {
+            finalText = `Новый рекорд! О май год! Ты красавчик! ${this.score.points}`
+        } else {
+            finalText = `Упс, игра окончена! Ваш счёт: ${this.score.points}`
+        }
+        
+        alert(finalText)
+        this.updateHighScore()
+
         this.start()
+    }
+
+    updateHighScore() {
+        this.highScoreElement.innerText = this.score.highScore
+        localStorage.setItem("highScore", this.score.highScore)
     }
 }
 
@@ -234,12 +251,17 @@ class Food {
 }
 
 class Score {
-    constructor() {
+    constructor(highScore) {
         this._points = 0
+        this._highScore = highScore
     }
 
     get points() {
         return this._points
+    }
+
+    get highScore() {
+        return this._highScore
     }
 
     onFoodEaten() {
@@ -248,6 +270,14 @@ class Score {
 
     onTick() {
         this._points += 1
+    }
+
+    onGameOver() {
+        if (this._highScore < this._points) {
+            this._highScore = this.points
+            return true
+        }
+        return false
     }
 }
 
@@ -288,6 +318,7 @@ class PlayerControls {
 const settings = {
     canvas: document.getElementById("game-canvas"),
     score: document.getElementById("game-score"),
+    highScore: document.getElementById("game-high-score"),
     scale: 10,
     speed: 6
 }
