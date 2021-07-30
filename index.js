@@ -39,6 +39,7 @@ class SnakeGame {
             this.renderer.render()
             this.checkWallCollision()
             this.checkFoodCollision()
+            this.checkSnakeCollision()
         }
         window.requestAnimationFrame(this._step)
     }
@@ -52,6 +53,15 @@ class SnakeGame {
     checkWallCollision() {
         if (this.snake.head.x < 0 || this.snake.head.x >= this.field.width) this.gameOver()
         if (this.snake.head.y < 0 || this.snake.head.y >= this.field.height) this.gameOver()
+    }
+
+    checkSnakeCollision() {
+        const head = this.snake.head
+        const bodyWithoutHead = this.snake.body.filter(bit => bit !== head)
+        const isCollision = bodyWithoutHead.some(bit => bit.x == head.x && bit.y == head.y)
+        if (isCollision) {
+            this.gameOver()
+        }
     }
 
     checkFoodCollision() {
