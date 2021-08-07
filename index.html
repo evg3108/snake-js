@@ -1,13 +1,46 @@
 <html>
-    <head>
-        <link rel="stylesheet" type="text/css" href="styles.css">
-    </head>
-    <body>
-        <script type="module" src="index.js"></script>
-        <h1>SNAKE WAHAHA</h1>
-        <canvas id="game-canvas" width="600" height="400">
-        </canvas>
-        <div><p>Ваш счёт: <span id="game-score"></span></p></div>
-        <div><p>Рекорд: <span id="game-high-score"></span></p></div>
-    </body>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+
+<body>
+    <script type="module" src="index.js"></script>
+    <h1>SNAKE WAHAHA</h1>
+    <div style="display: inline;">
+        <div id="canvas-div" style="position: absolute; z-index: 0;">
+            <canvas id="game-canvas" width="600" height="400">
+            </canvas>
+        </div>
+
+        <div id="start-menu-div" class="shown">
+            <p>Рекорд: <span id="game-high-score"></span></p>
+            <input type="button" id="startButton" value="Start"/>
+        </div>
+
+        <div id="gameover-menu-div" class="unshown">
+            <div>
+                <input type="button" id="restartButton" value="Restart"/>
+            </div>
+            <div id="finalTextDiv"></div>
+            <div>
+                <p>Ваш счёт: <span id="game-score"></span></p>
+            </div>
+            <div>
+                <p>Рекорд: <span id="game-high-score"></span></p>
+            </div>
+            
+        </div>
+
+    </div>
+    <!-- <div>
+        <div>
+            <p>Ваш счёт: <span id="game-score"></span></p>
+        </div>
+        <div>
+            <p>Рекорд: <span id="game-high-score"></span></p>
+        </div>
+    </div> -->
+</body>
+
 </html>

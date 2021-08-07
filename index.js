@@ -31,6 +31,10 @@ class SnakeGame {
         this.controls.onDirectionChange(direction => this.snake.setDirection(direction))
     }
 
+    stop() {
+
+    }
+
     step(timestamp) {
         if (timestamp - this.lastFrameTimestamp > 500 / this.speed) {
             this.lastFrameTimestamp = timestamp
@@ -72,12 +76,12 @@ class SnakeGame {
         if (eatenFoods.length == 0) return false
 
         eatenFoods.forEach(food => this.foods.splice(this.foods.indexOf(food), 1))
-        
+
         eatenFoods.forEach(food => {
             this.snake.grow()
             this.score.onFoodEaten()
         })
-        
+
         this.placeFood()
         return true
     }
@@ -88,13 +92,16 @@ class SnakeGame {
         if (isNewHighScore) {
             finalText = `Новый рекорд! О май год! Ты красавчик! ${this.score.points}`
         } else {
-            finalText = `Упс, игра окончена! Ваш счёт: ${this.score.points}`
+            finalText = `Упс, игра окончена!`
         }
-        
-        alert(finalText)
+
         this.updateHighScore()
 
-        this.start()
+        let gameoverWindow = document.getElementById("gameover-menu-div")
+        gameoverWindow.setAttribute("class", "shown")
+
+        document.getElementById("finalTextDiv").innerHTML = `<p align="center">${finalText}</p>`
+
     }
 
     updateHighScore() {
@@ -124,7 +131,7 @@ class CanvasRenderer extends GameRenderer {
         this.field = field
         this.foods = foods
         this.score = score
-        
+
         this.context.setTransform(scale, 0, 0, scale, 0, 0);
         // this.context.scale(scale, scale)
     }
@@ -217,7 +224,7 @@ class Snake {
         } else {
             this.body.pop() // remove tail
         }
-        
+
 
         const newHead = new SnakeBit(this.head.x + shiftX, this.head.y + shiftY)
         this.body.unshift(newHead) // add new head
@@ -298,7 +305,7 @@ class Score {
 class PlayerControls {
 
     constructor(snake) {
-        this.snake=snake
+        this.snake = snake
         this._onDocumentKeyDown = this.onDocumentKeyDown.bind(this)
         document.addEventListener("keydown", this._onDocumentKeyDown)
     }
@@ -329,6 +336,16 @@ class PlayerControls {
     }
 }
 
+function onButtonClick() {
+
+    document.getElementById("start-menu-div").setAttribute("class", "hidden")
+
+    document.getElementById("gameover-menu-div").setAttribute("class", "hidden")
+
+    
+    game.start()
+}
+
 const settings = {
     canvas: document.getElementById("game-canvas"),
     score: document.getElementById("game-score"),
@@ -337,7 +354,12 @@ const settings = {
     speed: 4
 }
 
+document.getElementById("startButton").addEventListener("click", onButtonClick)
+document.getElementById("restartButton").addEventListener("click", onButtonClick)
+
+
+
 
 //-------- общий код
+
 const game = new SnakeGame(settings)
-game.start()

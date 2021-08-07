@@ -1,3 +1,21 @@
 canvas {
     border: #CCC 1px solid;
+    background-color: aquamarine;
+}
+
+.shown {
+    width: 100px;
+    height: 80px;
+    border: #CCC 2px, solid;
+    align-content: center;
+    position: absolute;
+    left: 250px;
+    top: 160px;
+    z-index: 1;
+    display: inline;
+}
+
+.hidden {
+    position: absolute;
+    display: none;
 }
